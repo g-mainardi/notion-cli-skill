@@ -11,7 +11,7 @@ To install this skill, you can use the Antigravity CLI plugin installation comma
 agy plugin install https://github.com/g-mainardi/notion-cli-skill
 ```
 
-Once installed, the plugin and its `ntn` skill will be automatically discovered by the agent on its next run.
+Once installed, the plugin and its `notion-cli` skill will be automatically discovered by the agent on its next run.
 
 ## Usage
 
@@ -26,7 +26,7 @@ After installation, the agent will have access to the instructions defined in `S
 ## Structure
 
 - `plugin.json`: Metadata defining this repository as an Antigravity plugin.
-- `skills/ntn/SKILL.md`: The core instructions, examples, and knowledge the agent uses to operate the Notion CLI.
+- `skills/notion-cli/SKILL.md`: The core instructions, examples, and knowledge the agent uses to operate the Notion CLI.
 
 ## Contributing
 
