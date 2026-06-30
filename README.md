@@ -28,6 +28,10 @@ After installation, the agent will have access to the instructions defined in `S
 - `plugin.json`: Metadata defining this repository as an Antigravity plugin.
 - `skills/notion-cli/SKILL.md`: The core instructions, examples, and knowledge the agent uses to operate the Notion CLI.
 
+## Acknowledgements
+
+The core skill instructions (`skills/notion-cli/SKILL.md`) in this repository were adopted from the official [makenotion/skills](https://github.com/makenotion/skills) repository by Notion Labs, Inc. 
+
 ## Contributing
 
 Feel free to open issues or submit pull requests with additional CLI tricks, common commands, or improvements to the prompt.
