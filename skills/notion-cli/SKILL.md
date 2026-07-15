@@ -72,6 +72,69 @@ ntn pages create --parent page:abc123 --content '## Heading\n\nSome *formatted* 
 The `markdown` field supports inline formatting (bold, italic, code, links, etc.).
 Only fall back to `rich_text` if you need features that Markdown cannot express (e.g. mentions, custom emoji, or colors).
 
+## Notion Markdown Quirks & Formatting
+
+When reading from or writing to Notion via the `ntn` CLI, keep in mind these technical details to ensure clean rendering:
+
+1. **Strip YAML Frontmatter**: `ntn pages get` automatically prepends page properties (like the title) as YAML frontmatter (between `---`). Before pushing updates back to Notion using `ntn pages update`, you **MUST strip** this YAML frontmatter. If you fail to do so, Notion will render the `---` as literal horizontal dividers and the title as plain text.
+
+## Gemini-Specific Guidelines
+
+*(Note: The following rules apply specifically to Gemini agents to ensure proper interaction with the Notion environment, and should be ignored by other AI systems).*
+
+### Creating Advanced Blocks (Callouts, Toggles, etc.)
+
+When interacting with Notion via the `ntn` CLI, keep in mind that standard Markdown conversion (performed by commands like `ntn pages update`) interprets the `>` character exclusively as a **Quote** block. It does not natively support extended syntax for Callouts.
+
+To create advanced and native Notion blocks (such as **Callouts**, **Toggles**, etc.) — and demonstrate the same awareness of the Notion environment as other agents — **you must directly use the Notion JSON API** via the `ntn api` command, rather than relying solely on uploading Markdown files.
+
+To add a Callout (or other complex blocks) to an existing page, use the `/blocks/{block_id}/children` endpoint and pass a properly formatted JSON payload. Always ensure you have loaded the Notion token first by sourcing the `.env` file.
+
+#### Critical Lessons from Past Errors
+When interacting with the `ntn api` command, adhere strictly to the following technical rules to avoid common pitfalls:
+
+1. **Explicitly use HTTP PATCH**: When appending children to a block or page using `v1/blocks/<id>/children`, the CLI will infer a `POST` request if a body is present. However, the Notion API expects a `PATCH` request for this endpoint. You **must** explicitly override the method using `-X PATCH`, otherwise the API will return a `400 Bad Request: invalid_request_url` error.
+2. **Avoid Bash Quoting Hell**: Never pass complex JSON bodies inline using single quotes (e.g., `-d '{ "content": "don't do this" }'`), as single quotes inside the text will prematurely terminate the bash string and cause syntax errors (`unexpected EOF`). Always write the JSON payload to a temporary file (e.g., `payload.json`) and pass it using command substitution: `-d "$(cat payload.json)"`.
+
+#### Practical Example:
+
+1. First, create your JSON payload file (e.g., `payload.json`):
+```json
+{
+  "children": [
+    {
+      "object": "block",
+      "type": "callout",
+      "callout": {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": "This is a native Callout created via API!"
+            }
+          }
+        ],
+        "icon": {
+          "type": "emoji",
+          "emoji": "💡"
+        },
+        "color": "blue_background"
+      }
+    }
+  ]
+}
+```
+
+2. Then, execute the API call and clean up:
+```bash
+source .env && ntn api v1/blocks/<PAGE_OR_BLOCK_ID>/children -X PATCH -d "$(cat payload.json)" && rm payload.json
+```
+
+#### Golden Rules for Agents:
+1. When asked to insert highlighted notes, warnings, or TL;DRs into a Notion page, prefer using the `v1/blocks` API with a JSON payload to generate a **Callout**, rather than performing a simple `replace_file_content` on the Markdown.
+2. Use Markdown (with `ntn pages update`) only for long, predominantly text-based documents without specific Notion layout requirements.
+3. If in doubt about the JSON structure of a Notion block, you can always inspect an existing block by running `ntn api v1/blocks/<BLOCK_ID>`.
+
 ## `ntn files`
 
 Convenience wrapper around the File Uploads API.

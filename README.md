@@ -18,7 +18,7 @@ Once installed, the plugin and its `notion-cli` skill will be automatically disc
 After installation, the agent will have access to the instructions defined in `SKILL.md` when it needs to interact with Notion. You can simply ask your agent:
 
 - "Create a Notion page from this markdown file using the CLI."
-- "Read my Notion page with ID <page-id>."
+- "Read my Notion page with ID `<page-id>`."
 - "Search for 'Project Setup' in Notion."
 
 **Note**: The agent will need access to your `NOTION_API_TOKEN` environment variable or proper authentication setup for the `ntn` CLI to work effectively.
@@ -30,7 +30,7 @@ After installation, the agent will have access to the instructions defined in `S
 
 ## Acknowledgements
 
-The core skill instructions (`skills/notion-cli/SKILL.md`) in this repository were adopted from the official [makenotion/skills](https://github.com/makenotion/skills) repository by Notion Labs, Inc. 
+The core skill instructions (`skills/notion-cli/SKILL.md`) in this repository were adopted from the official [makenotion/skills](https://github.com/makenotion/skills) repository by Notion Labs, Inc.
 
 ## Contributing
 
