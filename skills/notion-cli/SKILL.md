@@ -77,6 +77,11 @@ Only fall back to `rich_text` if you need features that Markdown cannot express 
 When reading from or writing to Notion via the `ntn` CLI, keep in mind these technical details to ensure clean rendering:
 
 1. **Strip YAML Frontmatter**: `ntn pages get` automatically prepends page properties (like the title) as YAML frontmatter (between `---`). Before pushing updates back to Notion using `ntn pages update`, you **MUST strip** this YAML frontmatter. If you fail to do so, Notion will render the `---` as literal horizontal dividers and the title as plain text.
+   - **Utility Scripts**: 
+     - **Clean Frontmatter**: If a page already has leftover frontmatter blocks (e.g. `title: ...`, `id: ...`, `date: ...`, or `---`), you can use this utility script to automatically clean them up:
+       `python3 ~/.gemini/config/plugins/notion-cli-skill/skills/notion-cli/scripts/clean_frontmatter.py <PAGE_ID>`
+     - **List Blocks**: Finding a specific block ID in the massive raw JSON payload is difficult and consumes context. Use this utility script to neatly list all child blocks of a page or block with their IDs, types, and text previews:
+       `python3 ~/.gemini/config/plugins/notion-cli-skill/skills/notion-cli/scripts/list_blocks.py <PAGE_OR_BLOCK_ID>`
 
 ## Gemini-Specific Guidelines
 
@@ -132,8 +137,9 @@ source .env && ntn api v1/blocks/<PAGE_OR_BLOCK_ID>/children -X PATCH -d "$(cat 
 
 #### Golden Rules for Agents:
 1. When asked to insert highlighted notes, warnings, or TL;DRs into a Notion page, prefer using the `v1/blocks` API with a JSON payload to generate a **Callout**, rather than performing a simple `replace_file_content` on the Markdown.
-2. Use Markdown (with `ntn pages update`) only for long, predominantly text-based documents without specific Notion layout requirements.
-3. If in doubt about the JSON structure of a Notion block, you can always inspect an existing block by running `ntn api v1/blocks/<BLOCK_ID>`.
+2. Use Markdown (with `ntn pages update`) only for long, predominantly text-based documents without specific Notion layout requirements. **Avoid full page overwrites** unless necessary; prefer patching specific blocks to prevent truncating collaborative documents or destroying complex layouts.
+3. If in doubt about the JSON structure of a Notion block, you can always inspect an existing block by running `ntn api v1/blocks/<BLOCK_ID>`. Alternatively, use the `list_blocks.py` utility to quickly find block IDs without parsing raw JSON.
+4. **Inserting in a specific position**: By default, blocks are appended at the end of the page/parent. To insert blocks *after* a specific existing block, you must include `"after": "<BLOCK_ID>"` in your JSON payload. **Critical:** The Notion API only supports the `after` parameter if you enforce an API version of `2022-06-28` or newer. Example: `curl -s -X PATCH ... -H "Notion-Version: 2022-06-28" -d '{"children": [...], "after": "..."}'`.
 
 ## `ntn files`
 
