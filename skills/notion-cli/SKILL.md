@@ -23,10 +23,14 @@ syntax or relying on memorized knowledge:
   content.
 - `ntn <command> --help` — help for any command or subcommand.
 
-## Install
+## Install & Update
 
 ```bash
+# Install
 curl -fsSL https://ntn.dev | bash
+
+# Update to latest version
+ntn update
 ```
 
 ## Authentication
@@ -37,6 +41,13 @@ curl -fsSL https://ntn.dev | bash
 - `ntn login` / `ntn logout` — log the CLI in or out (only use if not using
   `NOTION_API_TOKEN`). `ntn login` requires the user to visit a URL in a web
   browser.
+
+## Diagnostics
+
+If you encounter issues with credentials or configuration, use these commands:
+- `ntn doctor` — Check the health of your Notion CLI setup.
+- `ntn auth` — Inspect authentication credentials.
+- `ntn whoami` — Show the authenticated Notion user.
 
 ## `ntn api`
 
