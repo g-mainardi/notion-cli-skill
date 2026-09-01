@@ -144,14 +144,14 @@ When interacting with the `ntn api` command, adhere strictly to the following te
 
 2. Then, execute the API call and clean up:
 ```bash
-source .env && ntn api v1/blocks/<PAGE_OR_BLOCK_ID>/children -X PATCH -d "$(cat payload.json)" && rm payload.json
+source .env && ntn api v1/blocks/<PAGE_OR_BLOCK_ID>/children -X PATCH --notion-version 2026-03-11 -d "$(cat payload.json)" && rm payload.json
 ```
 
 #### Golden Rules for Agents:
 1. When asked to insert highlighted notes, warnings, or TL;DRs into a Notion page, prefer using the `v1/blocks` API with a JSON payload to generate a **Callout**, rather than performing a simple `replace_file_content` on the Markdown.
 2. Use Markdown (with `ntn pages edit`) only for long, predominantly text-based documents without specific Notion layout requirements. **Avoid full page overwrites** unless necessary; prefer patching specific blocks to prevent truncating collaborative documents or destroying complex layouts.
 3. If in doubt about the JSON structure of a Notion block, you can always inspect an existing block by running `ntn api v1/blocks/<BLOCK_ID>`. Alternatively, use the `list_blocks.py` utility to quickly find block IDs without parsing raw JSON.
-4. **Inserting in a specific position**: By default, blocks are appended at the end of the page/parent. To insert blocks *after* a specific existing block, you must include `"after": "<BLOCK_ID>"` in your JSON payload. **Critical:** The Notion API only supports the `after` parameter if you enforce an API version of `2022-06-28` or newer. Example: `curl -s -X PATCH ... -H "Notion-Version: 2022-06-28" -d '{"children": [...], "after": "..."}'`.
+4. **Inserting in a specific position**: By default, blocks are appended at the end of the page/parent. To insert blocks in a specific location (e.g., after an existing block or at the start), you must use the `position` object in your JSON payload. **Critical:** You must explicitly pass the `--notion-version 2026-03-11` flag to use this feature, as the old `after` parameter is deprecated. *(Note: For basic API calls not requiring new features, you can omit the flag and let the CLI handle the default version)*. Example payload: `{"children": [...], "position": {"type": "after_block", "after_block": {"id": "..."}}}`.
 
 ## `ntn datasources`
 
