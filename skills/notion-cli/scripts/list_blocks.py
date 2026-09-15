@@ -5,7 +5,7 @@ import sys
 import os
 
 def get_blocks(block_id, token):
-    cmd = f"curl -s \"https://api.notion.com/v1/blocks/{block_id}/children\" -H \"Authorization: Bearer {token}\" -H \"Notion-Version: 2022-06-28\""
+    cmd = f"curl -s \"https://api.notion.com/v1/blocks/{block_id}/children\" -H \"Authorization: Bearer {token}\" -H \"Notion-Version: 2026-03-11\""
     res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     if res.returncode != 0:
         print(f"Error fetching blocks: {res.stderr}")
