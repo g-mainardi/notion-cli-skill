@@ -1,0 +1,2806 @@
+ntn 0.23.9
+
+===== ntn  --help
+Notion CLI (Beta)
+
+Usage: ntn [OPTIONS] <COMMAND>
+
+Commands:
+  api             Call the public Notion API (beta)
+  auth            Inspect authentication credentials
+  datasources     Manage data sources
+  files           Manage file uploads (beta)
+  pages           Manage pages
+  notion-as-code  Manage Notion-as-Code projects (alpha). Not publicly available
+  login           Log in to Notion
+  logout          Log out of Notion
+  whoami          Show the authenticated Notion user
+  doctor          Check the health of your Notion CLI setup
+  update          Update ntn to the latest version
+  workers         Manage workers (Beta)
+  help            Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for separate API-host requests (default varies by --env)
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for login and workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn api --help
+Call the public Notion API (beta)
+
+Usage: api [OPTIONS] [PATH] [INPUT]...
+       api [OPTIONS] [PATH] [INPUT]... <COMMAND>
+
+Commands:
+  ls    List supported public API endpoints
+  help  Print this message or the help of the given subcommand(s)
+
+Arguments:
+  [PATH]
+          The public Notion API path to call
+
+  [INPUT]...
+          Inline request inputs such as headers, query params, and body fields
+
+Options:
+  -d, --data <JSON|@PATH|@->
+          Use a JSON string, @path, or @- as the request body
+
+  -X, --method <METHOD>
+          Override the inferred HTTP method
+
+      --spec
+          Print a reduced OpenAPI fragment for the selected endpoint
+
+      --docs
+          Print the full official markdown docs for the selected endpoint
+
+      --file <PATH>
+          Read the file contents into a multipart `file` form field
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+  -h, --help
+          Print help for `ntn api` or for a specific endpoint
+
+Request Body Sources:
+  Use exactly one of these body sources per request:
+  - stdin JSON
+  - `-d, --data <JSON|@PATH|@->`
+  - inline body inputs such as `path=value` and `path:=json`
+
+Request Input Syntax:
+  Extra arguments after <PATH> are parsed as inline request inputs.
+
+  Header:Value   Request header                 Accept:application/json
+  name==value    Query parameter                page_size==100
+  path=value     Body string assignment         parent[page_id]=abc123
+  path:=json     Body typed JSON assignment     archived:=true
+
+  Parser precedence:
+  1. path:=json
+  2. name==value
+  3. Header:Value
+  4. path=value
+
+  Body paths support nested objects and arrays:
+  properties[foo]=bar
+  properties[count]:=10
+  children[][paragraph][rich_text][0][text][content]=Hello
+
+  Method selection:
+  - GET by default
+  - POST automatically when stdin JSON, `--data`, or inline body inputs are present
+  - -X/--method always wins
+
+  Notes:
+  - Use := for numbers, booleans, arrays, objects, and null.
+  - Use = to always store a JSON string.
+  - Use `--data @body.json` to read JSON from a file.
+  - Use `--data @-` to read JSON from stdin as the `--data` source.
+  - Body JSON must come from exactly one source: stdin, `--data`, or inline body inputs.
+
+  Shell Completion:
+  - PATH completions come from the live or cached OpenAPI spec.
+  - -X/--method only suggests methods supported by the selected path.
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI/docs lookups (default: https://developers.notion.com)
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root (`ntn api` cache uses NOTION_HOME/cache)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID override used by other CLI commands
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn api ls --help
+List supported public API endpoints
+
+Usage: ls [OPTIONS]
+
+Options:
+      --json
+          Output the live endpoint index as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -h, --help
+          Print help for `ntn api ls`
+
+Notes:
+  `ntn api ls` reads the live public OpenAPI spec and does not require authentication.
+  It may use a cached copy of `openapi.json` when available.
+
+Environment Variables:
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups (default: https://developers.notion.com)
+  NOTION_HOME                 Override the CLI state root (`ntn api ls` cache uses NOTION_HOME/cache)
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+
+===== ntn auth --help
+Inspect authentication credentials
+
+Usage: ntn auth [OPTIONS] <COMMAND>
+
+Commands:
+  token  Print the current authentication token
+  help   Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for non-login API requests (default varies by --env)
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn auth token --help
+Print the current authentication token
+
+Usage: ntn auth token [OPTIONS]
+
+Options:
+      --json
+          Output as JSON
+
+      --plain
+          Output as plain text for piping
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for non-login API requests (default varies by --env)
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn datasources --help
+Manage data sources
+
+Usage: ntn datasources [OPTIONS] <COMMAND>
+
+Commands:
+  query    Query pages in a data source
+  resolve  Resolve a Notion database ID to its data source IDs
+  help     Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Examples:
+  ntn datasources query <url-or-data-source-id>
+  ntn datasources query <url-or-data-source-id> --limit 50
+  ntn datasources query <url-or-data-source-id> --start-cursor <cursor> --json
+  ntn datasources query <url-or-data-source-id> --filter '{"property":"Done","checkbox":{"equals":true}}'
+  ntn datasources resolve <database-id>
+  ntn datasources resolve <database-id> --json
+
+Notes:
+  `ntn datasources query` accepts a data source ID, a database ID, or a Notion URL. Database IDs and URLs resolve to the database's single data source.
+  A database can hold multiple data sources; use `ntn datasources resolve <database-id>` to list them, then query one by ID.
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn datasources query --help
+Query pages in a data source
+
+Usage: ntn datasources query [OPTIONS] <ID_OR_URL>
+
+Arguments:
+  <ID_OR_URL>
+          Data source ID, database ID, or Notion URL
+
+Options:
+      --limit <LIMIT>
+          Maximum number of results to return
+          
+          [default: 25]
+
+      --start-cursor <START_CURSOR>
+          Cursor to resume pagination from
+
+  -v, --verbose
+          Show full error details including source chains
+
+  -s, --sort <SPEC>
+          Sort by `<property> [asc|desc]` (default asc). Repeat for multiple sorts; order matters
+
+      --filter <JSON>
+          Raw Notion filter JSON passed through verbatim
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+      --filter-file <PATH>
+          Path to a file containing raw Notion filter JSON. Use `-` for stdin
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Examples:
+  ntn datasources query <url-or-data-source-id>
+  ntn datasources query <url-or-data-source-id> --limit 50
+  ntn datasources query <url-or-data-source-id> --start-cursor <cursor> --json
+  ntn datasources query <url-or-data-source-id> --filter '{"property":"Done","checkbox":{"equals":true}}'
+  ntn datasources resolve <database-id>
+  ntn datasources resolve <database-id> --json
+
+Notes:
+  `ntn datasources query` accepts a data source ID, a database ID, or a Notion URL. Database IDs and URLs resolve to the database's single data source.
+  A database can hold multiple data sources; use `ntn datasources resolve <database-id>` to list them, then query one by ID.
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn datasources resolve --help
+Resolve a Notion database ID to its data source IDs
+
+Usage: ntn datasources resolve [OPTIONS] <ID>
+
+Arguments:
+  <ID>
+          Notion database ID
+
+Options:
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Examples:
+  ntn datasources query <url-or-data-source-id>
+  ntn datasources query <url-or-data-source-id> --limit 50
+  ntn datasources query <url-or-data-source-id> --start-cursor <cursor> --json
+  ntn datasources query <url-or-data-source-id> --filter '{"property":"Done","checkbox":{"equals":true}}'
+  ntn datasources resolve <database-id>
+  ntn datasources resolve <database-id> --json
+
+Notes:
+  `ntn datasources query` accepts a data source ID, a database ID, or a Notion URL. Database IDs and URLs resolve to the database's single data source.
+  A database can hold multiple data sources; use `ntn datasources resolve <database-id>` to list them, then query one by ID.
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn files --help
+Manage file uploads (beta)
+
+Usage: ntn files [OPTIONS] <COMMAND>
+
+Commands:
+  create  Create a file upload from stdin or an external URL
+  get     Retrieve a file upload by id
+  list    List file uploads [alias: ls]
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Examples:
+  ntn files create < file.png
+  ntn files create --filename photo.png --content-type image/png < /tmp/blob
+  ntn files create --external-url https://example.com/photo.png
+  ntn files get <upload-id>
+  ntn files list
+
+Notes:
+  - `ntn files create` always stages stdin bytes as a multipart upload.
+  - `ntn files create` is quiet on success except for the TTY progress bar on byte uploads.
+  - `--external-url` creates an external-url upload instead of reading stdin.
+  - `ntn files list` currently returns only the first page; pagination is not implemented yet.
+  - Byte uploads show a progress bar on stderr when stderr is a TTY.
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn files create --help
+Create a file upload from stdin or an external URL
+
+Usage: ntn files create [OPTIONS]
+
+Options:
+      --filename <NAME>
+          Override the uploaded filename when reading file bytes from stdin
+
+      --content-type <MIME>
+          Override the uploaded MIME type
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --external-url <URL>
+          Import a publicly accessible HTTPS file instead of reading bytes from stdin
+
+      --json
+          Output as JSON
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Examples:
+  ntn files create < file.png
+  ntn files create --filename photo.png --content-type image/png < /tmp/blob
+  ntn files create --external-url https://example.com/photo.png
+  ntn files get <upload-id>
+  ntn files list
+
+Notes:
+  - `ntn files create` always stages stdin bytes as a multipart upload.
+  - `ntn files create` is quiet on success except for the TTY progress bar on byte uploads.
+  - `--external-url` creates an external-url upload instead of reading stdin.
+  - `ntn files list` currently returns only the first page; pagination is not implemented yet.
+  - Byte uploads show a progress bar on stderr when stderr is a TTY.
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn files get --help
+Retrieve a file upload by id
+
+Usage: ntn files get [OPTIONS] <UPLOAD_ID>
+
+Arguments:
+  <UPLOAD_ID>
+          The file upload id to retrieve
+
+Options:
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Examples:
+  ntn files create < file.png
+  ntn files create --filename photo.png --content-type image/png < /tmp/blob
+  ntn files create --external-url https://example.com/photo.png
+  ntn files get <upload-id>
+  ntn files list
+
+Notes:
+  - `ntn files create` always stages stdin bytes as a multipart upload.
+  - `ntn files create` is quiet on success except for the TTY progress bar on byte uploads.
+  - `--external-url` creates an external-url upload instead of reading stdin.
+  - `ntn files list` currently returns only the first page; pagination is not implemented yet.
+  - Byte uploads show a progress bar on stderr when stderr is a TTY.
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn files list --help
+List file uploads
+
+Usage: ntn files list [OPTIONS]
+
+Options:
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Pagination:
+  `ntn files list` currently returns only the first page of results.
+  Follow-up pagination flags and auto-pagination are not implemented yet.
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_HOME                 Override the CLI state root for cache and config
+
+===== ntn pages --help
+Manage pages
+
+Usage: ntn pages [OPTIONS] <COMMAND>
+
+Commands:
+  trash   Trash a page
+  get     Retrieve a page as Markdown
+  create  Create a page from Markdown content
+  edit    Edit a page's content from Markdown
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Scope:
+  `ntn pages` supports retrieving, creating, and editing pages as Markdown content.
+
+Examples:
+  ntn pages get <page-id>
+  ntn pages get <page-id> --json
+  ntn pages create --content '# Title\n\nBody'
+  ntn pages create --parent data-source:01234567-89ab-cdef-0123-456789abcdef < page.md
+  ntn pages create                                                           # opens $EDITOR
+  ntn pages edit <page-id> --content '# Updated body'
+  ntn pages edit <page-id> < page.md
+  ntn pages edit <page-id>                                                   # opens $EDITOR
+
+Notes:
+  - `ntn pages get` prints page Markdown with page properties prepended as frontmatter by default.
+  - `ntn pages create` and `ntn pages edit` strip a leading frontmatter block from input, so `get` output can be fed back in. On create, a frontmatter `title` sets the page title; other frontmatter properties are ignored.
+  - If `ntn pages get` returns truncated Markdown, stderr will suggest using `--json` to inspect `unknown_block_ids`.
+  - Provide Markdown with `--content`, stdin, or interactively via `$EDITOR`.
+  - `--parent` (create only) is optional: `page:<id>`, `database:<id>`, or `data-source:<id>`.
+  - When no content source is given in a TTY, `$VISUAL` / `$EDITOR` / `vi` is opened.
+  - For properties, templates, or the full Pages API surface, use `ntn api v1/pages`.
+
+Environment Variables:
+  EDITOR                      Editor opened for interactive Markdown editing (fallback: vi)
+  VISUAL                      Preferred editor (checked before $EDITOR)
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Public API integration token for authentication (required today for `ntn pages`)
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn pages trash --help
+Trash a page
+
+Usage: ntn pages trash [OPTIONS] <PAGE_ID>
+
+Arguments:
+  <PAGE_ID>
+          The ID of the page to trash
+
+Options:
+      --yes
+          Skip confirmation prompt
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Scope:
+  `ntn pages` supports retrieving, creating, and editing pages as Markdown content.
+
+Examples:
+  ntn pages get <page-id>
+  ntn pages get <page-id> --json
+  ntn pages create --content '# Title\n\nBody'
+  ntn pages create --parent data-source:01234567-89ab-cdef-0123-456789abcdef < page.md
+  ntn pages create                                                           # opens $EDITOR
+  ntn pages edit <page-id> --content '# Updated body'
+  ntn pages edit <page-id> < page.md
+  ntn pages edit <page-id>                                                   # opens $EDITOR
+
+Notes:
+  - `ntn pages get` prints page Markdown with page properties prepended as frontmatter by default.
+  - `ntn pages create` and `ntn pages edit` strip a leading frontmatter block from input, so `get` output can be fed back in. On create, a frontmatter `title` sets the page title; other frontmatter properties are ignored.
+  - If `ntn pages get` returns truncated Markdown, stderr will suggest using `--json` to inspect `unknown_block_ids`.
+  - Provide Markdown with `--content`, stdin, or interactively via `$EDITOR`.
+  - `--parent` (create only) is optional: `page:<id>`, `database:<id>`, or `data-source:<id>`.
+  - When no content source is given in a TTY, `$VISUAL` / `$EDITOR` / `vi` is opened.
+  - For properties, templates, or the full Pages API surface, use `ntn api v1/pages`.
+
+Environment Variables:
+  EDITOR                      Editor opened for interactive Markdown editing (fallback: vi)
+  VISUAL                      Preferred editor (checked before $EDITOR)
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Public API integration token for authentication (required today for `ntn pages`)
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn pages get --help
+Retrieve a page as Markdown
+
+Usage: ntn pages get [OPTIONS] <PAGE_ID>
+
+Arguments:
+  <PAGE_ID>
+          Page ID to retrieve
+
+Options:
+      --json
+          Output as JSON
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Scope:
+  `ntn pages` supports retrieving, creating, and editing pages as Markdown content.
+
+Examples:
+  ntn pages get <page-id>
+  ntn pages get <page-id> --json
+  ntn pages create --content '# Title\n\nBody'
+  ntn pages create --parent data-source:01234567-89ab-cdef-0123-456789abcdef < page.md
+  ntn pages create                                                           # opens $EDITOR
+  ntn pages edit <page-id> --content '# Updated body'
+  ntn pages edit <page-id> < page.md
+  ntn pages edit <page-id>                                                   # opens $EDITOR
+
+Notes:
+  - `ntn pages get` prints page Markdown with page properties prepended as frontmatter by default.
+  - `ntn pages create` and `ntn pages edit` strip a leading frontmatter block from input, so `get` output can be fed back in. On create, a frontmatter `title` sets the page title; other frontmatter properties are ignored.
+  - If `ntn pages get` returns truncated Markdown, stderr will suggest using `--json` to inspect `unknown_block_ids`.
+  - Provide Markdown with `--content`, stdin, or interactively via `$EDITOR`.
+  - `--parent` (create only) is optional: `page:<id>`, `database:<id>`, or `data-source:<id>`.
+  - When no content source is given in a TTY, `$VISUAL` / `$EDITOR` / `vi` is opened.
+  - For properties, templates, or the full Pages API surface, use `ntn api v1/pages`.
+
+Environment Variables:
+  EDITOR                      Editor opened for interactive Markdown editing (fallback: vi)
+  VISUAL                      Preferred editor (checked before $EDITOR)
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Public API integration token for authentication (required today for `ntn pages`)
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn pages create --help
+Create a page from Markdown content
+
+Usage: ntn pages create [OPTIONS]
+
+Options:
+      --parent <PARENT>
+          Optional parent target, for example `page:<id>`, `database:<id>`, or `data-source:<id>`
+
+      --content <MARKDOWN>
+          Markdown content to create in the page
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+      --json
+          Output as JSON
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Scope:
+  `ntn pages` supports retrieving, creating, and editing pages as Markdown content.
+
+Examples:
+  ntn pages get <page-id>
+  ntn pages get <page-id> --json
+  ntn pages create --content '# Title\n\nBody'
+  ntn pages create --parent data-source:01234567-89ab-cdef-0123-456789abcdef < page.md
+  ntn pages create                                                           # opens $EDITOR
+  ntn pages edit <page-id> --content '# Updated body'
+  ntn pages edit <page-id> < page.md
+  ntn pages edit <page-id>                                                   # opens $EDITOR
+
+Notes:
+  - `ntn pages get` prints page Markdown with page properties prepended as frontmatter by default.
+  - `ntn pages create` and `ntn pages edit` strip a leading frontmatter block from input, so `get` output can be fed back in. On create, a frontmatter `title` sets the page title; other frontmatter properties are ignored.
+  - If `ntn pages get` returns truncated Markdown, stderr will suggest using `--json` to inspect `unknown_block_ids`.
+  - Provide Markdown with `--content`, stdin, or interactively via `$EDITOR`.
+  - `--parent` (create only) is optional: `page:<id>`, `database:<id>`, or `data-source:<id>`.
+  - When no content source is given in a TTY, `$VISUAL` / `$EDITOR` / `vi` is opened.
+  - For properties, templates, or the full Pages API surface, use `ntn api v1/pages`.
+
+Environment Variables:
+  EDITOR                      Editor opened for interactive Markdown editing (fallback: vi)
+  VISUAL                      Preferred editor (checked before $EDITOR)
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Public API integration token for authentication (required today for `ntn pages`)
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn pages edit --help
+Edit a page's content from Markdown
+
+Usage: ntn pages edit [OPTIONS] <PAGE_ID>
+
+Arguments:
+  <PAGE_ID>
+          Page ID to edit
+
+Options:
+      --content <MARKDOWN>
+          Markdown content to replace the page with
+
+      --allow-deleting-content
+          Allow deletion of child pages and databases during the content edit
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+      --json
+          Output as JSON
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Scope:
+  `ntn pages` supports retrieving, creating, and editing pages as Markdown content.
+
+Examples:
+  ntn pages get <page-id>
+  ntn pages get <page-id> --json
+  ntn pages create --content '# Title\n\nBody'
+  ntn pages create --parent data-source:01234567-89ab-cdef-0123-456789abcdef < page.md
+  ntn pages create                                                           # opens $EDITOR
+  ntn pages edit <page-id> --content '# Updated body'
+  ntn pages edit <page-id> < page.md
+  ntn pages edit <page-id>                                                   # opens $EDITOR
+
+Notes:
+  - `ntn pages get` prints page Markdown with page properties prepended as frontmatter by default.
+  - `ntn pages create` and `ntn pages edit` strip a leading frontmatter block from input, so `get` output can be fed back in. On create, a frontmatter `title` sets the page title; other frontmatter properties are ignored.
+  - If `ntn pages get` returns truncated Markdown, stderr will suggest using `--json` to inspect `unknown_block_ids`.
+  - Provide Markdown with `--content`, stdin, or interactively via `$EDITOR`.
+  - `--parent` (create only) is optional: `page:<id>`, `database:<id>`, or `data-source:<id>`.
+  - When no content source is given in a TTY, `$VISUAL` / `$EDITOR` / `vi` is opened.
+  - For properties, templates, or the full Pages API surface, use `ntn api v1/pages`.
+
+Environment Variables:
+  EDITOR                      Editor opened for interactive Markdown editing (fallback: vi)
+  VISUAL                      Preferred editor (checked before $EDITOR)
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Public API integration token for authentication (required today for `ntn pages`)
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn notion-as-code --help
+Manage Notion-as-Code projects (alpha). Not publicly available
+
+Usage: ntn notion-as-code [OPTIONS] <COMMAND>
+
+Commands:
+  new    Create a new Notion-as-Code project from the template (alpha) [alias: create]
+  apply  Build a Notion-as-Code project and apply it to your workspace (alpha)
+  list   List saved states for the current workspace (alpha) [alias: ls]
+  state  Inspect and manage saved Notion-as-Code state (alpha)
+  help   Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Examples:
+  ntn notion-as-code new my-project
+  ntn notion-as-code apply ./my-project
+  ntn notion-as-code apply intents.json --state ./state.json
+  ntn notion-as-code list
+  ntn notion-as-code state show deploy1
+
+Notes:
+  - Alpha: not publicly available. The API may reject requests in some environments.
+  - Projects are npm packages: apply runs their `npm run build` and submits the dist/intents.json it produces (requires Node.js).
+  - State files map script resourceIds to created records so re-runs update the same records.
+  - Named state lives under <config-dir>/notion-as-code/<env>/<workspace-id>/<name>.json.
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn notion-as-code new --help
+Create a new Notion-as-Code project from the template (alpha)
+
+Usage: ntn notion-as-code new [OPTIONS] [DIRECTORY]
+
+Arguments:
+  [DIRECTORY]  Directory to create the project in
+
+Options:
+      --force
+          Overwrite conflicting files
+      --git
+          Initialize a git repository
+  -v, --verbose
+          Show full error details including source chains
+      --no-git
+          Skip git initialization
+      --install
+          Install dependencies after initialization
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+      --no-install
+          Skip dependency installation
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn notion-as-code apply --help
+Build a Notion-as-Code project and apply it to your workspace (alpha)
+
+Usage: ntn notion-as-code apply [OPTIONS] <SCRIPT>
+
+Arguments:
+  <SCRIPT>
+          Project directory (runs its npm run build and applies dist/intents.json) or .json intents file
+
+Options:
+      --name <NAME>
+          Name of the saved state for this script (scoped to environment + workspace)
+          
+          [default: default]
+
+      --state <PATH>
+          Explicit state file to read and update (bypasses the named state store)
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+      --json
+          Print the run result as JSON to stdout
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Examples:
+  ntn notion-as-code new my-project
+  ntn notion-as-code apply ./my-project
+  ntn notion-as-code apply intents.json --state ./state.json
+  ntn notion-as-code list
+  ntn notion-as-code state show deploy1
+
+Notes:
+  - Alpha: not publicly available. The API may reject requests in some environments.
+  - Projects are npm packages: apply runs their `npm run build` and submits the dist/intents.json it produces (requires Node.js).
+  - State files map script resourceIds to created records so re-runs update the same records.
+  - Named state lives under <config-dir>/notion-as-code/<env>/<workspace-id>/<name>.json.
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_DOCS_BASE_URL    Base URL for OpenAPI lookups used to resolve the latest version
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for other CLI commands (same as --env)
+  NOTION_HOME                 Override the CLI state root for cache and config
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+  XDG_CACHE_HOME              XDG base directory for cached OpenAPI specs (fallback)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn notion-as-code list --help
+List saved states for the current workspace (alpha)
+
+Usage: ntn notion-as-code list [OPTIONS]
+
+Options:
+      --all-workspaces
+          List states for every workspace in the current environment
+      --json
+          
+  -v, --verbose
+          Show full error details including source chains
+      --plain
+          Output as tab-separated values
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn notion-as-code state --help
+Inspect and manage saved Notion-as-Code state (alpha)
+
+Usage: ntn notion-as-code state [OPTIONS] <COMMAND>
+
+Commands:
+  list  [alias: ls]
+  show  Show a saved state
+  rm    Remove a saved state
+  help  Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn notion-as-code state list --help
+Usage: ntn notion-as-code state list [OPTIONS]
+
+Options:
+      --all-workspaces
+          List states for every workspace in the current environment
+      --json
+          
+  -v, --verbose
+          Show full error details including source chains
+      --plain
+          Output as tab-separated values
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn notion-as-code state show --help
+Show a saved state
+
+Usage: ntn notion-as-code state show [OPTIONS] <NAME>
+
+Arguments:
+  <NAME>  Name of the saved state
+
+Options:
+      --json
+          Output the full state file as JSON
+      --plain
+          Output as tab-separated values
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn notion-as-code state rm --help
+Remove a saved state
+
+Usage: ntn notion-as-code state rm [OPTIONS] <NAME>
+
+Arguments:
+  <NAME>  Name of the saved state
+
+Options:
+      --yes
+          Skip confirmation prompt
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn login --help
+Log in to Notion
+
+Usage: ntn login [OPTIONS]
+
+Options:
+      --no-browser
+          Skip the browser and use the two-step login flow instead
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for login requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn logout --help
+Log out of Notion
+
+Usage: ntn logout [OPTIONS]
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_ENV             Environment to target: local, dev, stg, prod (same as --env)
+
+===== ntn whoami --help
+Show the authenticated Notion user
+
+Usage: ntn whoami [OPTIONS]
+
+Options:
+      --json
+          Output the raw /v1/users/me response as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --notion-version <VERSION>
+          Override the Notion-Version header
+          
+          [env: NOTION_API_VERSION=]
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for public API requests (default varies by --env)
+  NOTION_API_TOKEN            Override the token used for authentication
+  NOTION_API_VERSION          Notion-Version header to send (same as --notion-version)
+  NOTION_ENV                  Environment to target for saved workspace tokens (same as --env)
+  NOTION_HOME                 Override the CLI state root for config/auth state
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+  XDG_CONFIG_HOME             XDG base directory for config/auth state (fallback)
+
+===== ntn doctor --help
+Check the health of your Notion CLI setup
+
+Usage: ntn doctor [OPTIONS]
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_ENV             Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_HOME            Override config directory path
+  NOTION_KEYRING         Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  XDG_CONFIG_HOME        XDG base directory for config (fallback)
+
+===== ntn update --help
+Update ntn to the latest version
+
+Usage: ntn update [OPTIONS]
+
+Options:
+      --json
+          Output as JSON
+      --plain
+          Output as tab-separated values with no headers
+  -v, --verbose
+          Show full error details including source chains
+      --force
+          Force reinstall even if already on the latest version
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers --help
+Manage workers (Beta)
+
+Usage: ntn workers [OPTIONS] <COMMAND>
+
+Commands:
+  capabilities  Inspect worker capabilities
+  create        Create a worker without deploying
+  databases     Manage database declarations and bindings
+  delete        Delete a worker [alias: rm]
+  deploy        Deploy a worker (create or update)
+  new           Initialize a new worker project
+  env           Manage worker environment variables
+  exec          Execute a worker capability
+  get           Get a worker by ID
+  oauth         Manage OAuth connections for a worker
+  rename        Rename a worker
+  list          List all workers in the current workspace [alias: ls]
+  runs          Manage worker runs
+  sync          Manage worker syncs
+  usage         Show current-period AI credit usage for a worker
+  webhooks      Manage webhook capabilities
+  tui           Interactive terminal UI
+  help          Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers capabilities --help
+Inspect worker capabilities
+
+Usage: ntn workers capabilities [OPTIONS] <COMMAND>
+
+Commands:
+  list  List capabilities for a worker [alias: ls]
+  help  Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers capabilities list --help
+List capabilities for a worker
+
+Usage: ntn workers capabilities list [OPTIONS] [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          The ID of the worker (reads from workers.json if omitted)
+
+Options:
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers create --help
+Create a worker without deploying
+
+Usage: ntn workers create [OPTIONS]
+
+Options:
+      --name <NAME>
+          Name for the new worker
+      --json
+          Output as JSON
+  -v, --verbose
+          Show full error details including source chains
+      --plain
+          Output as tab-separated values with no headers
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers databases --help
+Manage database declarations and bindings
+
+Usage: ntn workers databases [OPTIONS] <COMMAND>
+
+Commands:
+  attach  Attach an existing Notion database to a worker database key
+  detach  Detach a bound Notion database from a worker database key
+  list    List a worker's declared databases and their binding status [alias: ls]
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers databases attach --help
+Attach an existing Notion database to a worker database key
+
+Usage: ntn workers databases attach [OPTIONS] <DATABASE_KEY> <DATABASE>
+
+Arguments:
+  <DATABASE_KEY>
+          The database key declared in the worker manifest
+
+  <DATABASE>
+          The Notion data source ID, or a link to the database
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from the configured workers file if omitted)
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --yes
+          Attach without confirmation
+
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers databases detach --help
+Detach a bound Notion database from a worker database key
+
+Usage: ntn workers databases detach [OPTIONS] [DATABASE_KEY]
+
+Arguments:
+  [DATABASE_KEY]
+          The database key declared in the worker manifest
+
+Options:
+      --data-source <DATABASE>
+          Detach by the attached Notion data source ID or database link instead of a manifest key
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from the configured workers file if omitted)
+
+      --yes
+          Detach without confirmation
+
+      --json
+          Output as JSON
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers databases list --help
+List a worker's declared databases and their binding status
+
+Usage: ntn workers databases list [OPTIONS] [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          The ID of the worker (reads from the configured workers file if omitted)
+
+Options:
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers delete --help
+Delete a worker
+
+Usage: ntn workers delete [OPTIONS] [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          The ID of the worker (reads from workers.json if omitted)
+
+Options:
+      --yes
+          Skip confirmation prompt
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers deploy --help
+Deploy a worker (create or update)
+
+Usage: ntn workers deploy [OPTIONS]
+
+Options:
+      --name <NAME>
+          Name for a new worker (required when creating, forbidden when updating)
+      --local-build
+          Build locally and install production dependencies separately for upload
+  -v, --verbose
+          Show full error details including source chains
+      --no-git
+          Disable git-based file discovery and use filesystem walking
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+      --yes
+          Skip the confirmation prompt for a deploy that may release databases
+      --json
+          Output as JSON
+      --plain
+          Output as tab-separated values with no headers
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers new --help
+Initialize a new worker project
+
+Usage: ntn workers new [OPTIONS] [DIRECTORY]
+
+Arguments:
+  [DIRECTORY]
+          Directory to create the worker project in
+
+Options:
+      --force
+          Overwrite conflicting files
+
+      --git
+          Initialize a git repository
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --no-git
+          Skip git initialization
+
+      --install
+          Install dependencies after initialization
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+      --no-install
+          Skip dependency installation
+
+      --template <ID_OR_URL>
+          Scaffold from a notion-cookbook template ID or public GitHub repository
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Template Sources:
+  <id>                                                 Worker template ID from notion-cookbook/catalog.json
+  https://github.com/<owner>/<repo>                    Public GitHub repository
+  https://github.com/<owner>/<repo>/tree/<ref>/<path>  Public GitHub repository path
+
+===== ntn workers env --help
+Manage worker environment variables
+
+Usage: ntn workers env [OPTIONS] <COMMAND>
+
+Commands:
+  set    Set one or more environment variables for a worker
+  list   List environment variables for a worker [alias: ls]
+  unset  Unset an environment variable for a worker [aliases: delete, rm]
+  pull   Pull remote environment variables into a local .env file
+  push   Push local .env file to remote environment variables
+  help   Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers env set --help
+Set one or more environment variables for a worker
+
+Usage: ntn workers env set [OPTIONS] <VARS>...
+
+Arguments:
+  <VARS>...
+          Environment variable key-value pairs (KEY=VALUE)
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers env list --help
+List environment variables for a worker
+
+Usage: ntn workers env list [OPTIONS] [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          The ID of the worker (reads from workers.json if omitted)
+
+Options:
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers env unset --help
+Unset an environment variable for a worker
+
+Usage: ntn workers env unset [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>
+          The environment variable key to unset
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers env pull --help
+Pull remote environment variables into a local .env file
+
+Usage: ntn workers env pull [OPTIONS] [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          The ID of the worker (reads from workers.json if omitted)
+
+Options:
+      --file <FILE>
+          Path to the .env file to write
+          
+          [default: .env]
+
+      --no-file
+          Print env vars to stdout instead of writing to a file
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --yes
+          Skip confirmation prompt
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers env push --help
+Push local .env file to remote environment variables
+
+Usage: ntn workers env push [OPTIONS] [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          The ID of the worker (reads from workers.json if omitted)
+
+Options:
+      --file <FILE>
+          Path to the .env file to read
+          
+          [default: .env]
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --yes
+          Skip confirmation prompt
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers exec --help
+Execute a worker capability
+
+Usage: ntn workers exec [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>  Capability key to execute
+
+Options:
+  -d, --data <DATA>
+          JSON input data (reads from stdin if not provided and stdin is not a TTY)
+      --stream
+          Stream the output
+  -v, --verbose
+          Show full error details including source chains
+  -l, --local
+          Execute the capability locally using tsx
+      --worker-id <WORKER_ID>
+          Worker ID (overrides workers.json)
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+      --dotenv <DOTENV>
+          Path to an env file to load (default: .env)
+      --no-dotenv
+          Skip loading .env file
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers get --help
+Get a worker by ID
+
+Usage: ntn workers get [OPTIONS] [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          The ID of the worker (reads from workers.json if omitted)
+
+Options:
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers oauth --help
+Manage OAuth connections for a worker
+
+Usage: ntn workers oauth [OPTIONS] <COMMAND>
+
+Commands:
+  show-redirect-url  Print the OAuth redirect URL to configure with your provider
+  start              Start an OAuth flow for a capability
+  token              Get an OAuth access token for a capability (for debugging)
+  help               Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers oauth show-redirect-url --help
+Print the OAuth redirect URL to configure with your provider
+
+Usage: ntn workers oauth show-redirect-url [OPTIONS]
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers oauth start --help
+Start an OAuth flow for a capability
+
+Usage: ntn workers oauth start [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>
+          The OAuth capability key
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers oauth token --help
+Get an OAuth access token for a capability (for debugging)
+
+Usage: ntn workers oauth token [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>
+          The OAuth capability key
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as plain text (just the token, for piping)
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers rename --help
+Rename a worker
+
+Usage: ntn workers rename [OPTIONS] <NAME>
+
+Arguments:
+  <NAME>
+          New name for the worker
+
+Options:
+      --worker-id <WORKER_ID>
+          Worker ID (reads from workers.json if omitted)
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers list --help
+List all workers in the current workspace
+
+Usage: ntn workers list [OPTIONS]
+
+Options:
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers runs --help
+Manage worker runs
+
+Usage: ntn workers runs [OPTIONS] <COMMAND>
+
+Commands:
+  list  List runs for a worker [alias: ls]
+  logs  Get logs for a worker run
+  help  Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers runs list --help
+List runs for a worker
+
+Usage: ntn workers runs list [OPTIONS] [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          The ID of the worker (reads from workers.json if omitted)
+
+Options:
+      --page-size <PAGE_SIZE>
+          Number of results to return per page
+          
+          [default: 100]
+
+      --cursor <CURSOR>
+          Cursor to resume pagination from
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers runs logs --help
+Get logs for a worker run
+
+Usage: ntn workers runs logs [OPTIONS] <RUN_ID>
+
+Arguments:
+  <RUN_ID>
+          The ID of the run
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers sync --help
+Manage worker syncs
+
+Usage: ntn workers sync [OPTIONS] <COMMAND>
+
+Commands:
+  pause    Pause a sync
+  resume   Resume a sync
+  trigger  Trigger a syncable capability to run now, bypassing schedule
+  state    Manage syncable capability state
+  status   Show status for a worker's syncable capabilities
+  help     Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers sync pause --help
+Pause a sync
+
+Usage: ntn workers sync pause [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>
+          The sync key to pause
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers sync resume --help
+Resume a sync
+
+Usage: ntn workers sync resume [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>
+          The sync key to resume
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers sync trigger --help
+Trigger a syncable capability to run now, bypassing schedule
+
+Usage: ntn workers sync trigger [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>
+          The syncable capability key to trigger
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+      --preview
+          Preview mode: invoke the capability callback without writing to the target
+
+  -v, --verbose
+          Show full error details including source chains
+
+  -c, --context <CONTEXT>
+          JSON context (cursor) to resume from a previous preview's nextContext
+
+  -l, --local
+          Execute the capability locally using tsx
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+      --dotenv <DOTENV>
+          Path to an env file to load (default: .env)
+
+      --no-dotenv
+          Skip loading .env file
+
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers sync state --help
+Manage syncable capability state
+
+Usage: ntn workers sync state [OPTIONS] <COMMAND>
+
+Commands:
+  get    Get sync state, including cursor and stats
+  reset  Reset syncable state, clearing the cursor and stats
+  help   Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers sync state get --help
+Get sync state, including cursor and stats
+
+Usage: ntn workers sync state get [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>
+          The sync capability key to get state for
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers sync state reset --help
+Reset syncable state, clearing the cursor and stats
+
+Usage: ntn workers sync state reset [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>
+          The syncable capability key to reset state for
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers sync status --help
+Show status for a worker's syncable capabilities
+
+Usage: ntn workers sync status [OPTIONS] [CAPABILITY_KEY]
+
+Arguments:
+  [CAPABILITY_KEY]
+          Only show status for this syncable capability key
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --no-watch
+          Disable live-updating watch mode (print once and exit)
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+      --interval <INTERVAL>
+          Poll interval in seconds (default: 2)
+          
+          [default: 2]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers usage --help
+Show current-period AI credit usage for a worker
+
+Usage: ntn workers usage [OPTIONS] [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          The ID of the worker (reads from workers.json if omitted)
+
+Options:
+      --all
+          Show usage for all workers in the current workspace
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers webhooks --help
+Manage webhook capabilities
+
+Usage: ntn workers webhooks [OPTIONS] <COMMAND>
+
+Commands:
+  list  List webhook URLs for a worker [alias: ls]
+  help  Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers webhooks list --help
+List webhook URLs for a worker
+
+Usage: ntn workers webhooks list [OPTIONS] [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          The ID of the worker (reads from workers.json if omitted)
+
+Options:
+      --json
+          Output as JSON
+
+      --plain
+          Output as tab-separated values with no headers
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_BASE_URL         Base URL for non-login API requests (default varies by --env)
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers tui --help
+Interactive terminal UI
+
+Usage: ntn workers tui [OPTIONS]
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn api ls
+POST	/v1/agents/batch	Apply many agent operations
+POST	/v1/agents/query	Query agents
+DELETE	/v1/agents/{agent_id}	Delete agent
+GET	/v1/agents/{agent_id}	Get agent
+PATCH	/v1/agents/{agent_id}/credit_limit	Update agent credit limit
+GET	/v1/agents/{agent_id}/insights	Get agent insights
+PATCH	/v1/agents/{agent_id}/status	Update agent status
+GET	/v1/ai/plugins	List skills plugins
+GET	/v1/ai/plugins/{id}	Get a plugin directory
+GET	/v1/ai/skills/{id}	Get a skill directory
+GET	/v1/async_tasks/{task_id}	Retrieve an async task
+POST	/v1/blocks/meeting_notes	Create a meeting note
+POST	/v1/blocks/meeting_notes/query	Query meeting notes
+DELETE	/v1/blocks/{block_id}	Delete a block
+GET	/v1/blocks/{block_id}	Retrieve a block
+PATCH	/v1/blocks/{block_id}	Update a block
+GET	/v1/blocks/{block_id}/children	Retrieve block children
+PATCH	/v1/blocks/{block_id}/children	Append block children
+GET	/v1/comments	List comments
+POST	/v1/comments	Create a comment
+DELETE	/v1/comments/{comment_id}	Delete a comment
+GET	/v1/comments/{comment_id}	Retrieve a comment
+PATCH	/v1/comments/{comment_id}	Update a comment
+GET	/v1/custom_emojis	List custom emojis
+POST	/v1/data_sources	Create a data source
+GET	/v1/data_sources/{data_source_id}	Retrieve a data source
+PATCH	/v1/data_sources/{data_source_id}	Update a data source
+POST	/v1/data_sources/{data_source_id}/query	Query a data source
+GET	/v1/data_sources/{data_source_id}/templates	List templates in a data source
+POST	/v1/databases	Create a database
+GET	/v1/databases/{database_id}	Retrieve a database
+PATCH	/v1/databases/{database_id}	Update a database
+GET	/v1/file_uploads	List file uploads
+POST	/v1/file_uploads	Create a file upload
+GET	/v1/file_uploads/{file_upload_id}	Retrieve a file upload
+POST	/v1/file_uploads/{file_upload_id}/complete	Complete a multi-part file upload
+POST	/v1/file_uploads/{file_upload_id}/send	Upload a file
+POST	/v1/pages	Create a page
+GET	/v1/pages/{page_id}	Retrieve a page
+PATCH	/v1/pages/{page_id}	Update page
+GET	/v1/pages/{page_id}/markdown	Retrieve a page as markdown
+PATCH	/v1/pages/{page_id}/markdown	Update a page's content as markdown
+POST	/v1/pages/{page_id}/move	Move a page
+GET	/v1/pages/{page_id}/properties/{property_id}	Retrieve a page property item
+POST	/v1/search	Search by title
+POST	/v1/sessions	Update a session
+POST	/v1/sessions/query	Query sessions
+GET	/v1/sessions/{session_id}	Retrieve a session
+POST	/v1/sessions/{session_id}/cancel	Cancel a session
+POST	/v1/sessions/{session_id}/events/query	Query session events
+GET	/v1/users	List all users
+GET	/v1/users/me	Retrieve your token's bot user
+GET	/v1/users/{user_id}	Retrieve a user
+GET	/v1/views	List views
+POST	/v1/views	Create a view
+DELETE	/v1/views/{view_id}	Delete a view
+GET	/v1/views/{view_id}	Retrieve a view
+PATCH	/v1/views/{view_id}	Update a view
+POST	/v1/views/{view_id}/queries	Create a view query
+DELETE	/v1/views/{view_id}/queries/{query_id}	Delete a view query
+GET	/v1/views/{view_id}/queries/{query_id}	Get view query results

@@ -48,7 +48,9 @@ After installation, the agent will have access to the instructions defined in `S
 - `.claude-plugin/marketplace.json`: Makes the repository installable as a Claude Code plugin.
 - `skills/notion-cli/SKILL.md`: The core instructions, examples, and knowledge the agent uses to operate the Notion CLI.
 - `skills/notion-cli/scripts/list_blocks.py`: Helper that lists a page's child blocks with their IDs.
-- `AGENTS.md`: Conventions for agents editing this repository.
+- `tests/`: Offline checks of the documented commands against a fake Notion API, plus a snapshot of `ntn --help` to spot CLI changes.
+- `evals/`: `claude plugin eval` cases that measure whether Claude picks the skill and uses the right commands.
+- `AGENTS.md`: Conventions for agents editing this repository, including how to run the tests.
 
 ## Acknowledgements
 
