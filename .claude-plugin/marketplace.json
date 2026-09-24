@@ -1,0 +1,15 @@
+{
+  "name": "notion-cli-skill",
+  "owner": {
+    "name": "Giosuè Giocondo Mainardi",
+    "url": "https://github.com/g-mainardi"
+  },
+  "plugins": [
+    {
+      "name": "notion-cli-skill",
+      "source": "./",
+      "description": "Teach the agent to use the Notion CLI (ntn) to read, create and edit pages and call the Notion API.",
+      "license": "MIT"
+    }
+  ]
+}

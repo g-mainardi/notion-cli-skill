@@ -14,7 +14,9 @@ There is no build, no tests and no dependencies. The product is the text of
 
 ## Layout
 
-- `plugin.json`: plugin metadata (name only).
+- `plugin.json`: Antigravity plugin metadata (name only).
+- `.claude-plugin/marketplace.json`: makes the repo a Claude Code marketplace
+  whose single plugin is the repo root (`"source": "./"`).
 - `skills/notion-cli/SKILL.md`: the skill itself: frontmatter (`name`,
   `description`) plus the instructions the agent reads.
 - `skills/notion-cli/scripts/list_blocks.py`: stdlib-only helper that lists the
@@ -28,8 +30,9 @@ Editing this repo does not update installed copies. After pushing:
 - **Antigravity / Gemini**: `agy plugin install https://github.com/g-mainardi/notion-cli-skill`.
   Always install from the repo URL, never from a local clone. It lands in
   `~/.gemini/config/plugins/notion-cli-skill`.
-- **Claude Code**: `~/.claude/skills/notion-cli` holds a copy of
-  `skills/notion-cli/`.
+- **Claude Code**: installed as a plugin from this repo's own marketplace
+  (`.claude-plugin/marketplace.json`). Update with
+  `claude plugin update notion-cli-skill@notion-cli-skill`.
 
 ## Editing rules
 
