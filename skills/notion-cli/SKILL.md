@@ -98,7 +98,8 @@ When reading from or writing to Notion via the `ntn` CLI, keep in mind these tec
 1. **Frontmatter Handling**: `ntn pages get` automatically prepends page properties as YAML frontmatter. Fortunatamente, i comandi `ntn pages create` e `ntn pages edit` **rimuovono automaticamente** questo blocco iniziale. Quindi puoi prendere l'output di `get` e passarlo direttamente in `edit` senza doverlo pulire manualmente.
 2. **Utility Scripts**:
    - **List Blocks**: Finding a specific block ID in the massive raw JSON payload is difficult and consumes context. Use this utility script to neatly list all child blocks of a page or block with their IDs, types, and text previews:
-     `python3 "${CLAUDE_PLUGIN_ROOT}/skills/notion-cli/scripts/list_blocks.py" <PAGE_OR_BLOCK_ID>`
+     `python3 <this skill's directory>/scripts/list_blocks.py <PAGE_OR_BLOCK_ID>`
+     (the script ships next to this `SKILL.md`; resolve the path from where the skill was loaded)
 
 ## Gemini-Specific Guidelines
 
