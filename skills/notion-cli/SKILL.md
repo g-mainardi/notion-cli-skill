@@ -1,10 +1,12 @@
 ---
 name: notion-cli
 description: >-
-  Use the Notion CLI (`ntn`) to interact with the Notion API, manage workers,
-  and upload files. Use when the user asks to "call the Notion API", "deploy a
-  worker", "upload a file to Notion", "create a page", "query a database", or
-  any task involving the `ntn` command.
+  Use the Notion CLI (`ntn`) to read, create and edit Notion pages, add blocks
+  such as callouts, query databases and data sources, call the Notion API,
+  upload files and manage workers. Use when the user asks to "read a Notion
+  page", "create a page", "edit a Notion page", "add a callout", "query a
+  database", "call the Notion API", "upload a file to Notion", "deploy a
+  worker", or any task involving the `ntn` command.
 ---
 
 # Notion CLI
@@ -23,6 +25,9 @@ syntax or relying on memorized knowledge:
   content.
 - `ntn <command> --help` — help for any command or subcommand.
 
+Most commands accept `--json` (machine-readable) or `--plain` (tab-separated,
+no headers): use them when you need to parse the output.
+
 ## Install & Update
 
 ```bash
@@ -33,14 +38,26 @@ curl -fsSL https://ntn.dev | bash
 ntn update
 ```
 
+`ntn update` can report success (`current  latest  true`) without actually
+replacing the binary. Verify with `ntn --version` afterward; if it didn't
+change, rerun the install script.
+
 ## Authentication
 
-- The CLI automatically uses `NOTION_API_TOKEN` when it is set.
-- Check `NOTION_API_TOKEN` first. If it is already set, prefer using it instead
-  of telling the user to run `ntn login`.
-- `ntn login` / `ntn logout` — log the CLI in or out (only use if not using
-  `NOTION_API_TOKEN`). `ntn login` requires the user to visit a URL in a web
-  browser.
+Act through the Notion integration token, never through the user's own login,
+so Notion attributes your edits to the integration and the user can tell them
+apart from their own.
+
+- The CLI uses `NOTION_API_TOKEN` when it is set, and it takes precedence over
+  any stored login. Check it is set before any call that touches content.
+- If it is not set, stop and ask the user for the token (it may live in a
+  `.env` they can `source`). Do not run `ntn login` or fall back to stored
+  login credentials: those act as the user.
+- Exception: `ntn workers` commands use the `ntn login` session. Ask the user
+  before running them.
+- The integration only sees pages and databases shared with it (page menu →
+  Connections). A `404 object_not_found` on a page that exists usually means
+  it isn't shared with the integration.
 
 ## Diagnostics
 
@@ -48,11 +65,6 @@ If you encounter issues with credentials or configuration, use these commands:
 - `ntn doctor` — Check the health of your Notion CLI setup.
 - `ntn auth` — Inspect authentication credentials.
 - `ntn whoami` — Show the authenticated Notion user.
-
-`ntn update` can report success (`current  latest  true`) without actually
-replacing the binary — verify with `ntn doctor` (it shows the running
-version) or `ntn --version` afterward. If the version didn't change, rerun
-the install script instead: `curl -fsSL https://ntn.dev | bash`.
 
 ## `ntn api`
 
@@ -67,12 +79,20 @@ ntn api v1/pages parent[page_id]=abc123
 
 # POST with JSON body
 ntn api v1/pages -d '{"parent":{"page_id":"abc123"}}'
+
+# JSON body from a file (avoids shell-quoting problems with apostrophes)
+ntn api v1/pages -d @payload.json
 ```
 
-The method is inferred (GET by default, POST when a body is present). Override
-with `-X METHOD`.
+- The method is inferred (GET by default, POST when a body is present).
+  Override with `-X METHOD`.
+- The CLI sends the latest API version by default (`2026-03-11`), so
+  `--notion-version` is only needed to pin an older one.
+- When stdin is not a terminal (scripts, background jobs), `ntn api` reads a
+  JSON body from it and can wait forever. Add `</dev/null` to calls without a
+  body in those contexts.
 
-### Markdown for pages and comments
+## Pages as Markdown
 
 Prefer `ntn pages create` / `ntn pages edit` for Markdown page content. Use
 the `markdown` field when creating or updating comments via `ntn api`.
@@ -88,83 +108,70 @@ ntn pages create --parent page:abc123 --content '## Heading\n\nSome *formatted* 
 ntn pages edit <page-id> --content '## Updated Heading\n\nUpdated content.'
 ```
 
-The `markdown` field supports inline formatting (bold, italic, code, links, etc.).
-Only fall back to `rich_text` if you need features that Markdown cannot express (e.g. mentions, custom emoji, or colors).
+- `ntn pages get` prepends page properties as YAML frontmatter. `create` and
+  `edit` strip a leading frontmatter block, so `get` output can be edited and
+  fed back in. On create, a frontmatter `title` sets the page title.
+- `ntn pages edit` replaces the whole page content. It refuses to delete child
+  pages or databases unless you pass `--allow-deleting-content`. On shared or
+  complex pages, prefer targeted block edits (below) over a full rewrite.
+- If `ntn pages get` warns that the Markdown is truncated, rerun it with
+  `--json` and inspect `unknown_block_ids`.
+- The `markdown` field supports inline formatting (bold, italic, code, links).
+  Only fall back to `rich_text` for what Markdown cannot express (mentions,
+  custom emoji, colors).
 
-## Notion Markdown Quirks & Formatting
+## Callouts, toggles and targeted block edits
 
-When reading from or writing to Notion via the `ntn` CLI, keep in mind these technical details to ensure clean rendering:
+Markdown conversion turns `>` into a Quote block and has no syntax for
+callouts. For callouts, toggles, or inserting blocks at a specific spot, use
+the blocks API.
 
-1. **Frontmatter Handling**: `ntn pages get` automatically prepends page properties as YAML frontmatter. Fortunatamente, i comandi `ntn pages create` e `ntn pages edit` **rimuovono automaticamente** questo blocco iniziale. Quindi puoi prendere l'output di `get` e passarlo direttamente in `edit` senza doverlo pulire manualmente.
-2. **Utility Scripts**:
-   - **List Blocks**: Finding a specific block ID in the massive raw JSON payload is difficult and consumes context. Use this utility script to neatly list all child blocks of a page or block with their IDs, types, and text previews:
-     `python3 <this skill's directory>/scripts/list_blocks.py <PAGE_OR_BLOCK_ID>`
-     (the script ships next to this `SKILL.md`; resolve the path from where the skill was loaded)
+- **Append children with `-X PATCH`.** `v1/blocks/<id>/children` only accepts
+  PATCH, but `ntn api` infers POST when a body is present, which fails with
+  `400 invalid_request_url`.
+- **Put the payload in a file** and pass it with `-d @payload.json`. Inline
+  JSON breaks as soon as the text contains a single quote.
+- **Choose the position** with a `position` object: `{"type": "start"}`,
+  `{"type": "end"}` (default), or
+  `{"type": "after_block", "after_block": {"id": "<block-id>"}}`. The old
+  `after` parameter is deprecated.
+- **Find block IDs** with the helper script that ships next to this
+  `SKILL.md`: `python3 <this skill's directory>/scripts/list_blocks.py <PAGE_OR_BLOCK_ID>`
+  prints one line per child block with its ID, type and a text preview. To
+  see a block's exact JSON shape, run `ntn api v1/blocks/<BLOCK_ID>`.
 
-## Gemini-Specific Guidelines
+Example: add a callout at the top of a page. `payload.json`:
 
-*(Note: The following rules apply specifically to Gemini agents to ensure proper interaction with the Notion environment, and should be ignored by other AI systems).*
-
-### Creating Advanced Blocks (Callouts, Toggles, etc.)
-
-When interacting with Notion via the `ntn` CLI, keep in mind that standard Markdown conversion (performed by commands like `ntn pages edit`) interprets the `>` character exclusively as a **Quote** block. It does not natively support extended syntax for Callouts.
-
-To create advanced and native Notion blocks (such as **Callouts**, **Toggles**, etc.) — and demonstrate the same awareness of the Notion environment as other agents — **you must directly use the Notion JSON API** via the `ntn api` command, rather than relying solely on uploading Markdown files.
-
-To add a Callout (or other complex blocks) to an existing page, use the `/blocks/{block_id}/children` endpoint and pass a properly formatted JSON payload. Always ensure you have loaded the Notion token first by sourcing the `.env` file.
-
-#### Critical Lessons from Past Errors
-When interacting with the `ntn api` command, adhere strictly to the following technical rules to avoid common pitfalls:
-
-1. **Explicitly use HTTP PATCH**: When appending children to a block or page using `v1/blocks/<id>/children`, the CLI will infer a `POST` request if a body is present. However, the Notion API expects a `PATCH` request for this endpoint. You **must** explicitly override the method using `-X PATCH`, otherwise the API will return a `400 Bad Request: invalid_request_url` error.
-2. **Avoid Bash Quoting Hell**: Never pass complex JSON bodies inline using single quotes (e.g., `-d '{ "content": "don't do this" }'`), as single quotes inside the text will prematurely terminate the bash string and cause syntax errors (`unexpected EOF`). Always write the JSON payload to a temporary file (e.g., `payload.json`) and pass it using command substitution: `-d "$(cat payload.json)"`.
-
-#### Practical Example:
-
-1. First, create your JSON payload file (e.g., `payload.json`):
 ```json
 {
   "children": [
     {
-      "object": "block",
       "type": "callout",
       "callout": {
-        "rich_text": [
-          {
-            "type": "text",
-            "text": {
-              "content": "This is a native Callout created via API!"
-            }
-          }
-        ],
-        "icon": {
-          "type": "emoji",
-          "emoji": "💡"
-        },
+        "rich_text": [{ "type": "text", "text": { "content": "Don't forget the review." } }],
+        "icon": { "type": "emoji", "emoji": "💡" },
         "color": "blue_background"
       }
     }
-  ]
+  ],
+  "position": { "type": "start" }
 }
 ```
 
-2. Then, execute the API call and clean up:
 ```bash
-source .env && ntn api v1/blocks/<PAGE_OR_BLOCK_ID>/children -X PATCH --notion-version 2026-03-11 -d "$(cat payload.json)" && rm payload.json
+ntn api v1/blocks/<PAGE_ID>/children -X PATCH -d @payload.json && rm payload.json
 ```
-
-#### Golden Rules for Agents:
-1. When asked to insert highlighted notes, warnings, or TL;DRs into a Notion page, prefer using the `v1/blocks` API with a JSON payload to generate a **Callout**, rather than performing a simple `replace_file_content` on the Markdown.
-2. Use Markdown (with `ntn pages edit`) only for long, predominantly text-based documents without specific Notion layout requirements. **Avoid full page overwrites** unless necessary; prefer patching specific blocks to prevent truncating collaborative documents or destroying complex layouts.
-3. If in doubt about the JSON structure of a Notion block, you can always inspect an existing block by running `ntn api v1/blocks/<BLOCK_ID>`. Alternatively, use the `list_blocks.py` utility to quickly find block IDs without parsing raw JSON.
-4. **Inserting in a specific position**: By default, blocks are appended at the end of the page/parent. To insert blocks in a specific location (e.g., after an existing block or at the start), you must use the `position` object in your JSON payload. **Critical:** You must explicitly pass the `--notion-version 2026-03-11` flag to use this feature, as the old `after` parameter is deprecated. *(Note: For basic API calls not requiring new features, you can omit the flag and let the CLI handle the default version)*. Example payload: `{"children": [...], "position": {"type": "after_block", "after_block": {"id": "..."}}}`.
 
 ## `ntn datasources`
 
-Manage data sources:
+Accepts a data source ID, a database ID, or a Notion URL. A database ID or URL
+resolves to its single data source; if a database has several, list them with
+`resolve` and query one by ID.
 
 ```bash
-ntn datasources query <data-source-id> --limit 50
+ntn datasources query <id-or-url> --limit 50
+ntn datasources query <id-or-url> --filter '{"property":"Done","checkbox":{"equals":true}}' --sort 'Due desc'
+ntn datasources query <id-or-url> --start-cursor <cursor> --json
 ntn datasources resolve <database-id>
 ```
 
@@ -175,7 +182,7 @@ Convenience wrapper around the File Uploads API.
 ```bash
 ntn files create < image.png
 ntn files create --external-url https://example.com/photo.png
-ntn files list
+ntn files list          # first page only; no pagination yet
 ntn files get <upload-id>
 ```
 
