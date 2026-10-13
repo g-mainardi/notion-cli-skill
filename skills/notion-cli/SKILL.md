@@ -197,3 +197,7 @@ ntn workers deploy               # deploy from current directory
 ntn workers ls                   # list workers
 ntn workers exec <capability>    # execute a capability
 ```
+
+`ntn workers new --template workflow` is a closed alpha. Warn the user and
+confirm they have access before using it; only then pass
+`--user-is-in-workflows-alpha` in non-interactive shells.

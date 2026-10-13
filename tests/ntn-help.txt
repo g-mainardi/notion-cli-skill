@@ -1,4 +1,4 @@
-ntn 0.23.9
+ntn 0.23.19
 
 ===== ntn  --help
 Notion CLI (Beta)
@@ -1361,6 +1361,7 @@ Commands:
   databases     Manage database declarations and bindings
   delete        Delete a worker [alias: rm]
   deploy        Deploy a worker (create or update)
+  download      Download the latest uploaded source into an empty directory
   new           Initialize a new worker project
   env           Manage worker environment variables
   exec          Execute a worker capability
@@ -1684,6 +1685,47 @@ Options:
   -V, --version
           Print version
 
+===== ntn workers download --help
+Download the latest uploaded source into an empty directory
+
+Usage: ntn workers download [OPTIONS] --dir <DIR> [WORKER_ID]
+
+Arguments:
+  [WORKER_ID]
+          Worker ID (reads workers.json if omitted)
+
+Options:
+      --dir <DIR>
+          Empty or new directory for the downloaded project
+
+      --json
+          Output the local path and worker identity as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output tab-separated values without headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
 ===== ntn workers new --help
 Initialize a new worker project
 
@@ -1720,6 +1762,9 @@ Options:
       --template <ID_OR_URL>
           Scaffold from a notion-cookbook template ID or public GitHub repository
 
+      --user-is-in-workflows-alpha
+          Confirm workflow alpha access without a prompt
+
   -h, --help
           Print help (see a summary with '-h')
 
@@ -1730,6 +1775,12 @@ Template Sources:
   <id>                                                 Worker template ID from notion-cookbook/catalog.json
   https://github.com/<owner>/<repo>                    Public GitHub repository
   https://github.com/<owner>/<repo>/tree/<ref>/<path>  Public GitHub repository path
+
+Workflow template — warning for agents:
+  The workflow template is in a private, closed alpha with no waitlist.
+  Before using --template workflow, warn the user and confirm their access.
+  Interactive use asks for confirmation unless --user-is-in-workflows-alpha
+  is passed. In non-interactive use, pass the flag after confirming access.
 
 ===== ntn workers env --help
 Manage worker environment variables
@@ -2676,8 +2727,9 @@ Manage webhook capabilities
 Usage: ntn workers webhooks [OPTIONS] <COMMAND>
 
 Commands:
-  list  List webhook URLs for a worker [alias: ls]
-  help  Print this message or the help of the given subcommand(s)
+  list          List webhook URLs for a worker [alias: ls]
+  verification  Enable or disable synchronous verification for a webhook
+  help          Print this message or the help of the given subcommand(s)
 
 Options:
   -v, --verbose
@@ -2722,6 +2774,108 @@ Options:
 Environment Variables:
   NOTION_API_BASE_URL         Base URL for non-login API requests (default varies by --env)
   NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers webhooks verification --help
+Enable or disable synchronous verification for a webhook
+
+Usage: ntn workers webhooks verification [OPTIONS] <COMMAND>
+
+Commands:
+  enable   Run synchronous verification for incoming requests
+  disable  Skip synchronous verification and deliver POST requests asynchronously
+  help     Print this message or the help of the given subcommand(s)
+
+Options:
+  -v, --verbose
+          Show full error details including source chains
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup) [env: NOTION_WORKERS_CONFIG_FILE=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
+
+===== ntn workers webhooks verification enable --help
+Run synchronous verification for incoming requests
+
+Usage: ntn workers webhooks verification enable [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>
+          The webhook capability key
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
+  NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
+  NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
+  NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
+  NOTION_WORKSPACE_ID         Workspace ID to operate on (overrides config default)
+
+===== ntn workers webhooks verification disable --help
+Skip synchronous verification and deliver POST requests asynchronously
+
+Usage: ntn workers webhooks verification disable [OPTIONS] <KEY>
+
+Arguments:
+  <KEY>
+          The webhook capability key
+
+Options:
+      --worker-id <WORKER_ID>
+          The ID of the worker (reads from workers.json if omitted)
+
+      --json
+          Output as JSON
+
+  -v, --verbose
+          Show full error details including source chains
+
+      --plain
+          Output as tab-separated values with no headers
+
+      --workers-config-file <WORKERS_CONFIG_FILE>
+          Path to workers.json config file (overrides default CWD lookup)
+          
+          [env: NOTION_WORKERS_CONFIG_FILE=]
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+
+Environment Variables:
+  NOTION_API_TOKEN            API token for authentication (overrides keychain)
+  NOTION_BASE_URL             Base URL for workers requests (default varies by --env)
   NOTION_ENV                  Environment to target: local, dev, stg, prod (same as --env)
   NOTION_KEYRING              Set to 0 to use file-based auth (~/.config/notion/auth.json) instead of OS keychain
   NOTION_WORKERS_CONFIG_FILE  Path to workers.json config file (same as --workers-config-file)
