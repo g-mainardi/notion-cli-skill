@@ -1,4 +1,4 @@
-ntn 0.23.19
+ntn 0.23.20
 
 ===== ntn  --help
 Notion CLI (Beta)
