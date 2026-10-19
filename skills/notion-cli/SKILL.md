@@ -1,12 +1,15 @@
 ---
 name: notion-cli
 description: >-
-  Use the Notion CLI (`ntn`) to read, create and edit Notion pages, add blocks
-  such as callouts, query databases and data sources, call the Notion API,
-  upload files and manage workers. Use when the user asks to "read a Notion
-  page", "create a page", "edit a Notion page", "add a callout", "query a
-  database", "call the Notion API", "upload a file to Notion", "deploy a
-  worker", or any task involving the `ntn` command.
+  Use the Notion CLI (`ntn`) from the shell: scripts and automations that run
+  outside a chat, raw Notion API calls (`ntn api`), block-level edits such as
+  callouts, toggles or inserting after a specific block, data source queries,
+  file uploads and Notion workers. Use when the user mentions `ntn`, the Notion
+  CLI, the terminal or a script, asks to "call the Notion API", "insert a block
+  after a heading", "upload a file to Notion" or "deploy a worker", or when a
+  connected Notion MCP server lacks the tool or plan access for the task. For
+  conversational reading, searching or editing of pages, prefer a connected
+  Notion MCP server if there is one.
 ---
 
 # Notion CLI
@@ -27,6 +30,17 @@ syntax or relying on memorized knowledge:
 
 Most commands accept `--json` (machine-readable) or `--plain` (tab-separated,
 no headers): use them when you need to parse the output.
+
+## CLI or Notion MCP
+
+If a Notion MCP server is also connected, split the work:
+
+- **MCP**: searching the workspace and reading or writing pages during a
+  conversation. It acts as the user and sees the whole workspace.
+- **`ntn`**: scripts and anything that runs outside a chat, endpoints the MCP
+  doesn't expose or the user's plan restricts, inserting blocks after a
+  specific block, file uploads, workers, and edits that should be attributed
+  to the integration rather than the user.
 
 ## Install & Update
 
