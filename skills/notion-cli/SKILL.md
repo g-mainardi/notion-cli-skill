@@ -206,6 +206,7 @@ Manage Notion workers (deploy, list, execute, etc.). Run `ntn workers --help`
 for subcommands.
 
 ```bash
+ntn workers availability         # can this workspace/user create workers?
 ntn workers new my-worker        # scaffold a new project
 ntn workers deploy               # deploy from current directory
 ntn workers ls                   # list workers
